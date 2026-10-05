@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#39FF14" />
+  <meta name="description" content="SAVE Engenharia — pré-dimensionamento e pré-validação local-first para infraestrutura de recarga de veículos elétricos." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>SAVE Engenharia</title>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">⚡</div>
+        <div>
+          <strong>SAVE</strong>
+          <span>ENGENHARIA</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</button>
+        <button class="nav-item" data-view="project"><span>＋</span>Novo projeto</button>
+        <button class="nav-item" data-view="curve"><span>⌁</span>Curva de carga</button>
+        <button class="nav-item" data-view="sizing"><span>∑</span>Dimensionamento</button>
+        <button class="nav-item" data-view="checklist"><span>✓</span>Pré-validação</button>
+        <button class="nav-item" data-view="report"><span>▤</span>Relatório</button>
+        <button class="nav-item" data-view="backup"><span>⇄</span>Backup local</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="offline-pill"><span class="dot"></span>Local-first • Offline</div>
+        <small>Dados armazenados neste dispositivo</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Projetos SAVE no seu dispositivo</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn ghost" id="installBtn" hidden>Instalar app</button>
+          <button class="btn primary" data-jump="project">+ Novo projeto</button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-dashboard">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">PROJETO ELÉTRICO • ELETROMOBILIDADE</span>
+            <h2>Projete, simule e pré-valide infraestrutura de recarga.</h2>
+            <p>Curva de carga, demanda, circuitos, DLM, checklist técnico e relatório — com dados salvos localmente no equipamento do profissional.</p>
+            <div class="hero-actions">
+              <button class="btn primary" data-jump="project">Criar projeto</button>
+              <button class="btn secondary" data-jump="curve">Simular curva</button>
+            </div>
+          </div>
+          <div class="hero-meter">
+            <div class="meter-ring">
+              <span id="healthScore">—</span>
+              <small>pré-validação</small>
+            </div>
+            <div>
+              <strong id="activeProjectName">Nenhum projeto ativo</strong>
+              <small id="activeProjectMeta">Crie ou abra um projeto</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span>Projetos locais</span><strong id="statProjects">0</strong><small>neste dispositivo</small></article>
+          <article class="stat-card"><span>Potência SAVE</span><strong id="statSavePower">0 kW</strong><small>projeto ativo</small></article>
+          <article class="stat-card"><span>Pico total</span><strong id="statPeak">0 kW</strong><small>curva simulada</small></article>
+          <article class="stat-card alertable"><span>Margem mínima</span><strong id="statHeadroom">—</strong><small>capacidade disponível</small></article>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">CURVA DE CARGA</span><h3>Visão de 24 horas</h3></div>
+              <button class="text-btn" data-jump="curve">Abrir simulador →</button>
+            </div>
+            <canvas id="miniChart" height="250"></canvas>
+            <div class="legend">
+              <span><i class="legend-building"></i>Instalação</span>
+              <span><i class="legend-ev"></i>Veículos</span>
+              <span><i class="legend-total"></i>Total</span>
+              <span><i class="legend-limit"></i>Limite</span>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head"><div><span class="eyebrow">STATUS</span><h3>Checklist do projeto</h3></div></div>
+            <div id="quickChecklist" class="quick-list"></div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">PROJETOS</span><h3>Projetos salvos</h3></div>
+            <button class="btn small secondary" id="createSampleBtn">Criar exemplo</button>
+          </div>
+          <div id="projectList" class="project-list"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-project">
+        <div class="wizard-bar">
+          <span class="step active">1 Dados</span><span class="step">2 Rede</span><span class="step">3 Carregadores</span><span class="step">4 Estratégia</span>
+        </div>
+
+        <form id="projectForm" class="panel form-panel">
+          <div class="section-title">
+            <div><span class="eyebrow">ETAPA 1</span><h3>Identificação do projeto</h3></div>
+            <span class="badge">LOCAL</span>
+          </div>
+          <div class="form-grid">
+            <label>Nome do projeto<input name="name" required placeholder="Ex.: Condomínio Via Verde" /></label>
+            <label>Cliente<input name="client" placeholder="Nome do cliente ou empresa" /></label>
+            <label>Responsável técnico<input name="responsible" placeholder="Profissional responsável" /></label>
+            <label>CREA/CFT<input name="registry" placeholder="Registro profissional" /></label>
+            <label>Concessionária
+              <select name="utility">
+                <option>Energisa Acre</option><option>Energisa</option><option>Outra</option>
+              </select>
+            </label>
+            <label>Tipo de instalação
+              <select name="installationType">
+                <option>Condomínio</option><option>Comercial</option><option>Industrial</option><option>Frota</option><option>Eletroposto</option><option>Residencial</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="section-title"><div><span class="eyebrow">ETAPA 2</span><h3>Rede e capacidade</h3></div></div>
+          <div class="form-grid">
+            <label>Tensão da rede (V)<input name="voltage" type="number" min="100" value="220" /></label>
+            <label>Sistema
+              <select name="phases"><option value="1">Monofásico</option><option value="3" selected>Trifásico</option></select>
+            </label>
+            <label>Limite operacional (kW)<input name="siteLimit" type="number" min="1" step="0.1" value="200" /></label>
+            <label>Demanda base média (kW)<input name="baseLoad" type="number" min="0" step="0.1" value="90" /></label>
+            <label>Pico existente estimado (kW)<input name="existingPeak" type="number" min="0" step="0.1" value="150" /></label>
+            <label>Transformador (kVA)<input name="transformerKva" type="number" min="0" step="1" value="225" /></label>
+          </div>
+
+          <div class="section-title"><div><span class="eyebrow">ETAPA 3</span><h3>Carregadores</h3></div></div>
+          <div class="form-grid">
+            <label>Quantidade<input name="chargerQty" type="number" min="1" max="500" value="20" /></label>
+            <label>Potência por carregador (kW)<input name="chargerPower" type="number" min="1" step="0.1" value="7.4" /></label>
+            <label>Fator de potência<input name="powerFactor" type="number" min="0.5" max="1" step="0.01" value="0.99" /></label>
+            <label>Comprimento médio do circuito (m)<input name="length" type="number" min="1" step="1" value="25" /></label>
+          </div>
+
+          <div class="section-title"><div><span class="eyebrow">ETAPA 4</span><h3>Estratégia de recarga</h3></div></div>
+          <div class="form-grid">
+            <label>Gerenciamento dinâmico (DLM)
+              <select name="dlm"><option value="yes" selected>Sim</option><option value="no">Não</option></select>
+            </label>
+            <label>Limite SAVE com DLM (kW)<input name="dlmLimit" type="number" min="1" step="0.1" value="60" /></label>
+            <label>Início preferencial<input name="chargeStart" type="number" min="0" max="23" value="18" /></label>
+            <label>Fim preferencial<input name="chargeEnd" type="number" min="0" max="23" value="6" /></label>
+          </div>
+
+          <div class="notice">
+            <strong>Pré-validação técnica.</strong> O sistema organiza cálculos e verificações, mas não substitui responsabilidade técnica, análise de projeto executivo, normas completas, fabricante ou aprovação formal da concessionária.
+          </div>
+
+          <div class="form-actions">
+            <button class="btn secondary" type="button" id="newBlankBtn">Limpar</button>
+            <button class="btn primary" type="submit">Salvar e calcular</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="view" id="view-curve">
+        <div class="grid-3 curve-layout">
+          <article class="panel control-panel">
+            <span class="eyebrow">SIMULAÇÃO</span>
+            <h3>Gerador da curva</h3>
+            <p class="muted">Ajuste o perfil da instalação e a estratégia de recarga.</p>
+            <label>Perfil da instalação
+              <select id="profileSelect"><option value="commercial">Comercial</option><option value="residential">Residencial</option><option value="industrial">Industrial</option><option value="flat">Constante</option></select>
+            </label>
+            <label>Fator de intensidade do perfil
+              <input id="profileIntensity" type="range" min="70" max="130" value="100" />
+              <span class="range-value"><b id="profileIntensityValue">100%</b></span>
+            </label>
+            <label>Limite operacional (kW)<input id="curveLimit" type="number" min="1" step="0.1" /></label>
+            <label>Limite DLM (kW)<input id="curveDlm" type="number" min="0" step="0.1" /></label>
+            <div class="button-stack">
+              <button class="btn primary" id="generateCurveBtn">Gerar curva</button>
+              <button class="btn secondary" id="applyCurveBtn">Salvar no projeto</button>
+            </div>
+          </article>
+
+          <article class="panel curve-main">
+            <div class="panel-head"><div><span class="eyebrow">24 HORAS</span><h3>Curva de carga projetada</h3></div><span class="badge" id="curveSourceBadge">SIMULADA</span></div>
+            <canvas id="mainChart" height="320"></canvas>
+            <div class="legend">
+              <span><i class="legend-building"></i>Instalação</span>
+              <span><i class="legend-ev"></i>Recarga</span>
+              <span><i class="legend-total"></i>Total</span>
+              <span><i class="legend-limit"></i>Limite</span>
+            </div>
+            <div class="metric-row">
+              <div><span>Pico instalação</span><strong id="mExistingPeak">—</strong></div>
+              <div><span>Pico SAVE</span><strong id="mEvPeak">—</strong></div>
+              <div><span>Pico total</span><strong id="mTotalPeak">—</strong></div>
+              <div><span>Margem mínima</span><strong id="mMargin">—</strong></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <span class="eyebrow">DADOS HORÁRIOS</span>
+            <h3>Editar curva</h3>
+            <div class="hour-table-wrap">
+              <table class="hour-table">
+                <thead><tr><th>Hora</th><th>Instalação kW</th><th>SAVE kW</th></tr></thead>
+                <tbody id="hourTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-sizing">
+        <div class="grid-2">
+          <article class="panel">
+            <span class="eyebrow">CIRCUITO TERMINAL</span>
+            <h3>Pré-dimensionamento</h3>
+            <div class="form-grid compact">
+              <label>Potência (kW)<input id="szPower" type="number" step="0.1" value="7.4" /></label>
+              <label>Tensão (V)<input id="szVoltage" type="number" value="220" /></label>
+              <label>Fases<select id="szPhases"><option value="1">1</option><option value="3">3</option></select></label>
+              <label>Fator de potência<input id="szPf" type="number" step="0.01" value="0.99" /></label>
+              <label>Comprimento (m)<input id="szLength" type="number" value="25" /></label>
+              <label>Fator de correção global<input id="szDerating" type="number" min="0.5" max="1" step="0.01" value="0.90" /></label>
+            </div>
+            <button class="btn primary full" id="calcSizingBtn">Calcular circuito</button>
+            <div class="notice small-note">A seção sugerida usa uma tabela conservadora interna para pré-dimensionamento. O projeto executivo deve confirmar método de instalação, temperatura, agrupamento, capacidade de condução, fabricante e requisitos normativos aplicáveis.</div>
+          </article>
+
+          <article class="panel result-card">
+            <span class="eyebrow">RESULTADO</span>
+            <h3 id="szStatus">Aguardando cálculo</h3>
+            <div class="result-grid">
+              <div><span>Corrente calculada</span><strong id="rCurrent">—</strong></div>
+              <div><span>Seção sugerida</span><strong id="rCable">—</strong></div>
+              <div><span>Disjuntor inicial</span><strong id="rBreaker">—</strong></div>
+              <div><span>Queda estimada</span><strong id="rDrop">—</strong></div>
+            </div>
+            <div class="formula-box" id="formulaBox">Selecione os dados e execute o cálculo.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-checklist">
+        <article class="panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">MOTOR NORMATIVO</span><h3>Pré-validação do projeto</h3></div>
+            <span class="badge warn">NÃO É APROVAÇÃO FORMAL</span>
+          </div>
+          <div id="fullChecklist" class="checklist"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-report">
+        <article class="panel report-actions">
+          <div><span class="eyebrow">DOCUMENTAÇÃO</span><h3>Memorial resumido</h3><p class="muted">Gere uma versão pronta para impressão/PDF com os dados do projeto.</p></div>
+          <button class="btn primary" id="printReportBtn">Imprimir / Salvar PDF</button>
+        </article>
+        <article class="report-sheet" id="reportSheet"></article>
+      </section>
+
+      <section class="view" id="view-backup">
+        <div class="grid-2">
+          <article class="panel">
+            <span class="eyebrow">SEGURANÇA DOS DADOS</span>
+            <h3>Backup local</h3>
+            <p>Exporte todos os projetos para um arquivo JSON. O arquivo pode ser guardado em pendrive, nuvem pessoal ou transferido para outro dispositivo.</p>
+            <div class="button-stack">
+              <button class="btn primary" id="exportBackupBtn">Exportar backup</button>
+              <label class="btn secondary file-btn">Importar backup<input type="file" id="importBackupInput" accept=".json,application/json" hidden /></label>
+            </div>
+            <div class="notice">Como os dados ficam neste dispositivo, limpar os dados do navegador pode apagar os projetos. Faça backups periódicos.</div>
+          </article>
+          <article class="panel">
+            <span class="eyebrow">ARMAZENAMENTO</span>
+            <h3>Resumo local</h3>
+            <div class="result-grid">
+              <div><span>Projetos</span><strong id="backupProjects">0</strong></div>
+              <div><span>Projeto ativo</span><strong id="backupActive">—</strong></div>
+              <div><span>Banco</span><strong>IndexedDB</strong></div>
+              <div><span>Internet</span><strong id="onlineStatus">—</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
